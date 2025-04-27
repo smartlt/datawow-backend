@@ -9,10 +9,14 @@ import { Model, Types } from 'mongoose';
 import { User, UserDocument } from './entities/auth.entity';
 import { LoginDto } from './dto/login.dto';
 import { LoginResponseDto } from './dto/login-response.dto';
+import { JwtService } from '@nestjs/jwt';
 
 @Injectable()
 export class AuthService {
-  constructor(@InjectModel(User.name) private userModel: Model<UserDocument>) {}
+  constructor(
+    @InjectModel(User.name) private userModel: Model<UserDocument>,
+    private jwtService: JwtService,
+  ) {}
 
   async register(createAuthDto: CreateAuthDto): Promise<User> {
     // Check if user already exists
@@ -36,8 +40,14 @@ export class AuthService {
     if (!user) {
       throw new NotFoundException('User not found');
     }
+    // Generate JWT token
+    const payload = {
+      username: user.username,
+      sub: String(user._id),
+    };
+    const token = this.jwtService.sign(payload);
 
-    // Return user data as a properly typed response
+    // Return user data with token
     const response: LoginResponseDto = {
       id:
         user._id instanceof Types.ObjectId
@@ -45,6 +55,7 @@ export class AuthService {
           : String(user._id),
       username: user.username,
       createdAt: user.createdAt,
+      accessToken: token,
     };
 
     return response;
@@ -56,6 +67,14 @@ export class AuthService {
 
   async findOne(id: string): Promise<User> {
     const user = await this.userModel.findById(id).exec();
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+    return user;
+  }
+
+  async findByUsername(username: string): Promise<User> {
+    const user = await this.userModel.findOne({ username }).exec();
     if (!user) {
       throw new NotFoundException('User not found');
     }
