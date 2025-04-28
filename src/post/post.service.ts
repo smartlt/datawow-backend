@@ -172,7 +172,7 @@ export class PostService {
   }
 
   async findAllCategories(): Promise<Category[]> {
-    return this.categoryModel.find().exec();
+    return Promise.resolve([]);
   }
 
   async findOneCategory(id: string): Promise<Category> {
