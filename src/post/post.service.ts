@@ -257,4 +257,20 @@ export class PostService {
 
     return deletedComment;
   }
+
+  async findPostsByAuthor(authorId: string): Promise<Post[]> {
+    return this.postModel
+      .find({ author: authorId })
+      .sort({ createdAt: -1 }) // Sort by creation date, newest first
+      .populate('author', 'username')
+      .populate('category', 'name')
+      .populate({
+        path: 'comments',
+        populate: {
+          path: 'author',
+          select: 'username',
+        },
+      })
+      .exec();
+  }
 }

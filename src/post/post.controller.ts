@@ -158,4 +158,27 @@ export class PostController {
     }
     return this.postService.removePost(id, userId);
   }
+
+  @Get('my-posts')
+  @ApiOperation({
+    summary: 'Get posts by authenticated user',
+    description:
+      'Retrieves all posts created by the currently authenticated user',
+  })
+  @ApiOkResponse({
+    description: 'List of posts by authenticated user',
+    type: [PostEntity],
+  })
+  @ApiUnauthorizedResponse({
+    description: 'User not authenticated',
+  })
+  getMyPosts(
+    @Req() req: Request & { user?: { username?: string; id?: string } },
+  ) {
+    const userId = req.user?.id;
+    if (!userId) {
+      throw new UnauthorizedException('User ID is required');
+    }
+    return this.postService.findPostsByAuthor(userId);
+  }
 }
