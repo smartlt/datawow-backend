@@ -50,6 +50,7 @@ export class PostService {
   async findAllPosts(): Promise<Post[]> {
     return this.postModel
       .find()
+      .sort({ createdAt: -1 })
       .populate('author', 'username')
       .populate('category', 'name')
       .populate({
